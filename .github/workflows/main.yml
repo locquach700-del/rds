@@ -13,6 +13,10 @@ jobs:
         $TailscalePath = "C:\Program Files\Tailscale\tailscale.exe"
         while (!(Test-Path $TailscalePath)) { Start-Sleep -Seconds 2 }
         $env:TAILSCALE_AUTH_KEY = "${{ secrets.TAILSCALE_AUTH_KEY }}"
+        if ([string]::IsNullOrWhiteSpace($env:TAILSCALE_AUTH_KEY)) {
+            Write-Host "::error::Secret TAILSCALE_AUTH_KEY dang rong. Hay tao secret truoc khi chay."
+            exit 1
+        }
         & $TailscalePath up --authkey=$env:TAILSCALE_AUTH_KEY --accept-routes
 
     - name: 2. Kich hoat Remote Desktop va Tai khoan
@@ -21,15 +25,12 @@ jobs:
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-        $RawPassword = "${{ secrets.RDP_PASSWORD }}"
-        if ([string]::IsNullOrWhiteSpace($RawPassword)) {
-            Write-Host "::warning::Secret RDP_PASSWORD chua duoc tao, dung mat khau mac dinh."
-            $RawPassword = "ChieNgamE2026!"
-        }
+        # Mat khau hard-code (doi neu can)
+        $RawPassword = "ChieNgamE2026!"
 
         $Password = ConvertTo-SecureString $RawPassword -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
-        Write-Host "Da dat mat khau cho runneradmin."
+        Write-Host "Da dat mat khau cho runneradmin thanh cong."
 
     - name: 3. Don dep va Ep tang toc o cung SSD
       shell: powershell
@@ -63,4 +64,6 @@ jobs:
       shell: powershell
       run: |
         Write-Host "May ao da toi uu SSD xong va dang chay!"
+        Write-Host "RDP user: runneradmin"
+        Write-Host "RDP password: ChieNgamE2026!"
         Start-Sleep -Seconds 21600

@@ -3,67 +3,142 @@ on: workflow_dispatch
 
 jobs:
   build:
+    # Repo PUBLIC → runner này được 4 vCPU / 16 GB RAM / 14 GB SSD miễn phí
+    # Repo PRIVATE → chỉ 2 vCPU / 8 GB RAM
     runs-on: windows-latest
 
     steps:
+    # ==========================================================
+    # BƯỚC 0: DỌN Ổ CỨNG NHƯ MÁY MỚI MUA
+    # Chạy ĐẦU TIÊN để giải phóng tối đa dung lượng trước khi cài gì
+    # ==========================================================
+    - name: 0. Don dep o cung (nhu may moi mua)
+      shell: powershell
+      run: |
+        Write-Host "===== DUNG LUONG TRUOC KHI DON ====="
+        Get-PSDrive C | Select-Object @{n='Used(GB)';e={[math]::Round($_.Used/1GB,2)}}, @{n='Free(GB)';e={[math]::Round($_.Free/1GB,2)}}
+
+        # 1. Xoa cache cac tool lon (Python, Node, Java, Android, .NET...)
+        $pathsToRemove = @(
+            "C:\hostedtoolcache",
+            "C:\agent",
+            "C:\ProgramData\Microsoft\AndroidSDK",
+            "C:\Program Files (x86)\Android",
+            "C:\Program Files\Microsoft SDKs",
+            "C:\Program Files (x86)\Microsoft SDKs",
+            "C:\Program Files\dotnet\sdk",
+            "C:\Program Files\dotnet\shared",
+            "C:\Program Files\Microsoft Visual Studio",
+            "C:\Program Files (x86)\Microsoft Visual Studio",
+            "C:\ProgramData\chocolatey\lib",
+            "C:\ProgramData\chocolatey\logs",
+            "C:\ProgramData\Package Cache",
+            "C:\Windows\Installer\$PatchCache$"
+        )
+        foreach ($p in $pathsToRemove) {
+            if (Test-Path $p) {
+                Write-Host "Dang xoa: $p"
+                Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+
+        # 2. Xoa cache Windows Update, temp, log
+        Write-Host "Dang xoa Windows Update cache, Temp, Logs..."
+        Remove-Item -Path "C:\Windows\SoftwareDistribution\Download\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "C:\Windows\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:RUNNER_TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "C:\Windows\Logs\CBS\*" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "$env:LOCALAPPDATA\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+        # 3. Xoa pagefile + hiberfil (neu co) de lay lai vai GB
+        Write-Host "Dang tat hibernation va xoa hiberfil.sys..."
+        powercfg.exe /hibernate off 2>$null
+
+        # 4. Chay Disk Cleanup tu dong
+        Write-Host "Dang chay Windows Disk Cleanup..."
+        cleanmgr /sagerun:1 2>$null | Out-Null
+        Start-Sleep -Seconds 5
+
+        # 5. TRIM toi uu SSD (dung -ReTrim, KHONG dung -Defrag cho SSD)
+        Write-Host "Dang TRIM toi uu SSD..."
+        Optimize-Volume -DriveLetter C -ReTrim -Verbose
+
+        Write-Host "===== DUNG LUONG SAU KHI DON ====="
+        Get-PSDrive C | Select-Object @{n='Used(GB)';e={[math]::Round($_.Used/1GB,2)}}, @{n='Free(GB)';e={[math]::Round($_.Free/1GB,2)}}
+
+    # ==========================================================
+    # BƯỚC 1: CÀI TAILSCALE
+    # ==========================================================
     - name: 1. Install Tailscale via Winget
       shell: powershell
       run: |
         winget install Tailscale.Tailscale --silent --accept-source-agreements --accept-package-agreements
         $TailscalePath = "C:\Program Files\Tailscale\tailscale.exe"
         while (!(Test-Path $TailscalePath)) { Start-Sleep -Seconds 2 }
+
         $env:TAILSCALE_AUTH_KEY = "${{ secrets.TAILSCALE_AUTH_KEY }}"
         if ([string]::IsNullOrWhiteSpace($env:TAILSCALE_AUTH_KEY)) {
-            Write-Host "::error::Secret TAILSCALE_AUTH_KEY dang rong. Hay tao secret truoc khi chay."
+            Write-Host "::error::Secret TAILSCALE_AUTH_KEY dang rong. Tao secret truoc khi chay."
             exit 1
         }
-        & $TailscalePath up --authkey=$env:TAILSCALE_AUTH_KEY --accept-routes
 
+        & $TailscalePath up --authkey=$env:TAILSCALE_AUTH_KEY --accept-routes
+        & $TailscalePath status
+
+    # ==========================================================
+    # BƯỚC 2: BẬT RDP + ĐẶT MẬT KHẨU
+    # ==========================================================
     - name: 2. Kich hoat Remote Desktop va Tai khoan
       shell: powershell
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-        # Mat khau hard-code (doi neu can)
-        $RawPassword = "ChieNgamE2026!"
+        # Lay mat khau tu secret (repo public nen KHONG hard-code)
+        $RawPassword = "${{ secrets.RDP_PASSWORD }}"
+        if ([string]::IsNullOrWhiteSpace($RawPassword)) {
+            Write-Host "::error::Secret RDP_PASSWORD dang rong. Tao secret truoc khi chay."
+            exit 1
+        }
 
         $Password = ConvertTo-SecureString $RawPassword -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
         Write-Host "Da dat mat khau cho runneradmin thanh cong."
 
-    - name: 3. Don dep va Ep tang toc o cung SSD
-      shell: powershell
-      run: |
-        Write-Host "Dang xoa cac bo cache va cong cu du thua de lam trong o cung SSD..."
-        Remove-Item -Path "C:\hostedtoolcache" -Recurse -Force -ErrorAction SilentlyContinue
-        Remove-Item -Path "C:\agent" -Recurse -Force -ErrorAction SilentlyContinue
-
-        Write-Host "Dang kich hoat lenh TRIM toi uu hoa toc do SSD..."
-        Optimize-Volume -DriveLetter C -Defrag -Verbose
-
-    - name: 4. Cai Mesa3D software OpenGL renderer
+    # ==========================================================
+    # BƯỚC 3: CÀI MESA3D (OpenGL software renderer)
+    # ==========================================================
+    - name: 3. Cai Mesa3D software OpenGL renderer
       uses: ssciwr/setup-mesa-dist-win@v3
       with:
         version: '26.0.3'
         build-type: 'release-msvc'
         deployment-choice: '1'
 
-    - name: 5. Xac nhan cau hinh CPU / RAM / Mesa
+    # ==========================================================
+    # BƯỚC 4: XÁC NHẬN CẤU HÌNH
+    # ==========================================================
+    - name: 4. Xac nhan cau hinh CPU / RAM / O cung / Mesa
       shell: powershell
       run: |
-        Write-Host "===== CAU HINH MAY AO ====="
+        Write-Host "===== CPU ====="
         Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores, NumberOfLogicalProcessors
-        Get-CimInstance Win32_ComputerSystem | Select-Object TotalPhysicalMemory
-        Write-Host "===== Kiem tra Mesa3D ====="
+        Write-Host "===== RAM ====="
+        Get-CimInstance Win32_ComputerSystem | Select-Object @{n='RAM(GB)';e={[math]::Round($_.TotalPhysicalMemory/1GB,2)}}
+        Write-Host "===== O CUNG ====="
+        Get-PSDrive C | Select-Object @{n='Used(GB)';e={[math]::Round($_.Used/1GB,2)}}, @{n='Free(GB)';e={[math]::Round($_.Free/1GB,2)}}
+        Write-Host "===== MESA3D ====="
         if ($env:GALLIUM_DRIVER) { Write-Host "GALLIUM_DRIVER = $env:GALLIUM_DRIVER" }
         if ($env:MESA_LOADER_DRIVER_OVERRIDE) { Write-Host "MESA_LOADER_DRIVER_OVERRIDE = $env:MESA_LOADER_DRIVER_OVERRIDE" }
-        Get-ChildItem -Path "C:\" -Filter "opengl32.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
 
-    - name: 6. Duy tri va Treo game
+    # ==========================================================
+    # BƯỚC 5: TREO MÁY
+    # ==========================================================
+    - name: 5. Duy tri va Treo may
       shell: powershell
       run: |
-        Write-Host "May ao da toi uu SSD xong va dang chay!"
+        Write-Host "===== MAY AO DANG CHAY ====="
         Write-Host "RDP user: runneradmin"
-        Write-Host "RDP password: ChieNgamE2026!"
+        Write-Host "RDP password: (lay tu secret RDP_PASSWORD)"
+        Write-Host "Ket noi qua IP Tailscale (100.x.x.x)"
         Start-Sleep -Seconds 21600

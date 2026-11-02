@@ -3,8 +3,6 @@ on: workflow_dispatch
 
 jobs:
   build:
-    # Dùng runner tiêu chuẩn để job chắc chắn được nhận.
-    # Sau khi đã cấu hình xong Larger Runner, đổi thành label chính xác của runner đó.
     runs-on: windows-latest
 
     steps:
@@ -22,8 +20,16 @@ jobs:
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        $Password = ConvertTo-SecureString "${{ secrets.RDP_PASSWORD }}" -AsPlainText -Force
+
+        $RawPassword = "${{ secrets.RDP_PASSWORD }}"
+        if ([string]::IsNullOrWhiteSpace($RawPassword)) {
+            Write-Host "::warning::Secret RDP_PASSWORD chua duoc tao, dung mat khau mac dinh."
+            $RawPassword = "ChieNgamE2026!"
+        }
+
+        $Password = ConvertTo-SecureString $RawPassword -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
+        Write-Host "Da dat mat khau cho runneradmin."
 
     - name: 3. Don dep va Ep tang toc o cung SSD
       shell: powershell
@@ -35,7 +41,7 @@ jobs:
         Write-Host "Dang kich hoat lenh TRIM toi uu hoa toc do SSD..."
         Optimize-Volume -DriveLetter C -Defrag -Verbose
 
-    - name: 4. Cai Mesa3D software OpenGL renderer (thay driver GPU ao)
+    - name: 4. Cai Mesa3D software OpenGL renderer
       uses: ssciwr/setup-mesa-dist-win@v3
       with:
         version: '26.0.3'

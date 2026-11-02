@@ -3,11 +3,9 @@ on: workflow_dispatch
 
 jobs:
   build:
-    # Larger Runner 4-core: 4 vCPU, 16 GB RAM, 150 GB SSD
-    # LƯU Ý: label phải khớp với tên runner đã tạo trong Organization Settings > Actions > Runners.
-    # Ví dụ phổ biến: windows-2022-4core / windows-11-4core
-    # Nếu chưa có Larger Runner, đổi lại thành: windows-latest
-    runs-on: windows-2022-4core
+    # Dùng runner tiêu chuẩn để job chắc chắn được nhận.
+    # Sau khi đã cấu hình xong Larger Runner, đổi thành label chính xác của runner đó.
+    runs-on: windows-latest
 
     steps:
     - name: 1. Install Tailscale via Winget
@@ -27,7 +25,7 @@ jobs:
         $Password = ConvertTo-SecureString "${{ secrets.RDP_PASSWORD }}" -AsPlainText -Force
         Set-LocalUser -Name "runneradmin" -Password $Password
 
-    - name: 3. Don dep va Ep tang toc o cung SSD (Lay them dung luong trong)
+    - name: 3. Don dep va Ep tang toc o cung SSD
       shell: powershell
       run: |
         Write-Host "Dang xoa cac bo cache va cong cu du thua de lam trong o cung SSD..."
@@ -59,6 +57,4 @@ jobs:
       shell: powershell
       run: |
         Write-Host "May ao da toi uu SSD xong va dang chay!"
-        Write-Host "Runner: 4 vCPU / 16 GB RAM"
-        Write-Host "OpenGL: Mesa3D (llvmpipe - software renderer)"
         Start-Sleep -Seconds 21600

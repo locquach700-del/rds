@@ -1,12 +1,33 @@
-name: Kich Hoat May Ao Qua Web Tmate
+name: Kich Hoat May Ao Mien Phi Qua Serveo
 
 on: 
   workflow_dispatch: # Bấm nút chạy thủ công trên web
 
 jobs:
-  web-terminal:
-    runs-on: ubuntu-latest # Dùng máy Linux khởi động siêu tốc
+  fast-rdp:
+    runs-on: ubuntu-latest # Dùng máy ảo Linux khởi động siêu tốc
 
     steps:
-      - name: Khoi tao link dieu khien qua Web browser
-        uses: mxschmitt/action-tmate@v3
+      - name: Khoi tao duong truyen lay lenh dang nhap truc tiep
+        run: |
+          echo "=================================================="
+          echo " DANG KICH HOAT DUONG TRUYEN TOC DO CAO SERVEO "
+          echo "=================================================="
+          
+          # Khởi chạy cổng kết nối ngầm thông qua hệ thống Serveo công khai
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:22 serveo.net > serveo.log 2>&1 &
+          
+          # Đợi 5 giây để hệ thống Serveo cấp đường link kết nối ổn định
+          sleep 5
+          
+          # In trực tiếp kết quả để lấy link đăng nhập
+          echo "=================================================="
+          echo " LỆNH ĐĂNG NHẬP MÁY CHỦ CỦA BẠN LÀ:"
+          echo "=================================================="
+          cat serveo.log
+          echo "=================================================="
+          echo "👉 Hãy copy toàn bộ dòng lệnh hiển thị phía trên"
+          echo "và dán vào cmd/PowerShell trên máy tính của bạn để đăng nhập nhé!"
+          
+          # Giữ máy ảo chạy liên tục để bạn sử dụng
+          sleep 21600

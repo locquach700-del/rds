@@ -1,22 +1,25 @@
-name: Test Windows Server Runner
+name: Chay May Ao Mien Phi GitHub
 
-# Kích hoạt chạy khi bạn bấm nút thủ công hoặc khi push code lên nhánh main
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch: # Tạo nút bấm chạy thủ công trên web
 
 jobs:
-  test-job:
-    # BẮT BUỘC: Dòng này bắt GitHub phải gửi lệnh về máy Windows Server của bạn
-    runs-on: self-hosted
+  free-job:
+    # Đổi từ self-hosted sang ubuntu-latest (máy Linux chạy mượt và nhanh nhất)
+    runs-on: ubuntu-latest 
 
     steps:
-      - name: Kéo code từ GitHub về máy
+      - name: Keo code tu Repository ve may ao
         uses: actions/checkout@v4
 
-      - name: Kiểm tra thông tin máy chủ
+      # MÁY ẢO CỦA GITHUB ĐÃ CÓ SẴN PYTHON, BẠN CHỈ CẦN GỌI RA DÙNG:
+      - name: Chay thu nghiem xem cau hinh may mien phi
         run: |
-          Write-Host "Xin chao! Day la lenh chay tu may Windows Server cua ban."
-          Write-Host "Ten máy chu:" $env:COMPUTERNAME
-          Write-Host "Phien ban Windows:" (Get-CimInstance Win32_OperatingSystem).Caption
+          echo "=== Thong tin CPU may ao GitHub ==="
+          lscpu | grep "Model name"
+          echo "=== Thong tin RAM may ao GitHub ==="
+          free -h
+          echo "=== Kiem tra phien ban Python co san ==="
+          python3 --version

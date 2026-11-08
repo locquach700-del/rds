@@ -8,26 +8,23 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
-      - name: 1. Tai va Cau hinh Ngrok lay IP truc tiep
+      - name: 1. Cai dat Ngrok chinh thuc tu he thong va Lay IP
         run: |
           echo "=== DANG KICH HOAT DUONG TRUYEN TOC DO CAO ==="
           
-          # Tải bản Ngrok Linux định dạng ZIP chính thức ổn định nhất
-          wget -q -O ngrok.zip https://equinox.io
-          
-          # Giải nén file zip lập tức
-          unzip -o ngrok.zip
+          # Cài đặt Ngrok bản mới nhất chính thức thông qua Snapcraft của Ubuntu (Không lo lỗi link tải)
+          sudo snap install ngrok
           
           # Cấu hình Token của bạn
-          ./ngrok config add-authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u"
+          ngrok config add-authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u"
           
           # Khởi chạy cổng kết nối ngầm qua vùng Châu Á (ap) để giảm lag
-          ./ngrok tcp 22 --region ap > /dev/null &
+          ngrok tcp 22 --region ap > /dev/null &
           
-          # Đợi 5 giây để hệ thống thiết lập đường truyền
+          # Đợi 5 giây để hệ thống thiết lập đường truyền ổn định
           sleep 5
           
-          # Truy xuất và in thẳng địa chỉ IP kết nối ra màn hình log
+          # Truy xuất và in thẳng địa chỉ IP kết nối ra màn hình log công khai
           echo "=================================================="
           echo " ĐỊA CHỈ IP KẾT NỐI ĐĂNG NHẬP CỦA BẠN LÀ:"
           echo "=================================================="

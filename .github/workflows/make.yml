@@ -1,0 +1,22 @@
+name: Test Windows Server Runner
+
+# Kích hoạt chạy khi bạn bấm nút thủ công hoặc khi push code lên nhánh main
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test-job:
+    # BẮT BUỘC: Dòng này bắt GitHub phải gửi lệnh về máy Windows Server của bạn
+    runs-on: self-hosted
+
+    steps:
+      - name: Kéo code từ GitHub về máy
+        uses: actions/checkout@v4
+
+      - name: Kiểm tra thông tin máy chủ
+        run: |
+          Write-Host "Xin chao! Day la lenh chay tu may Windows Server cua ban."
+          Write-Host "Ten máy chu:" $env:COMPUTERNAME
+          Write-Host "Phien ban Windows:" (Get-CimInstance Win32_OperatingSystem).Caption

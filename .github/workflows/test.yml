@@ -1,0 +1,60 @@
+name: Mo RDP Qua Ngrok Server Chau A Giam Lag
+
+on:
+  workflow_dispatch: # Bấm nút chạy thủ công trên giao diện web
+
+jobs:
+  rdp-ngrok:
+    runs-on: self-hosted # Chạy trên máy Windows của bạn
+
+    steps:
+      - name: 1. Toi uu he thong RDP va bang thong Windows
+        shell: powershell
+        run: |
+          Write-Host "Dang thiet lap UDP va toi uu mang..." -ForegroundColor Cyan
+          # Kích hoạt RDP sử dụng cả giao thức UDP để giảm trễ chuột
+          netsh int tcp set global autotuninglevel=normal
+          netsh int tcp set global congestionprovider=ctcp
+          if (-not (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services")) {
+              New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT" -Name "Terminal Services" -Force
+          }
+          New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services" -Name "SelectNetworkDetect" -PropertyType DWord -Value 1 -Force
+
+      - name: 2. Tai va Cau hinh Ngrok Server Chau A (Singapore/Tokyo)
+        shell: powershell
+        run: |
+          Write-Host "Dang tai Ngrok..." -ForegroundColor Cyan
+          # Tự động tải bản Ngrok chính thức cho Windows
+          Invoke-WebRequest -Uri "https://equinox.io" -OutFile "ngrok.zip"
+          
+          # Giải nén
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [System.IO.Compression.ZipFile]::ExtractToDirectory("$PWD\ngrok.zip", "$PWD")
+          
+          Write-Host "Dang thiet lap Token va Vung ket noi..." -ForegroundColor Cyan
+          # THAY THẾ ĐOẠN mã_token_của_bạn_ở_đây BẰNG TOKEN THỰC TẾ TRÊN NGROK CỦA BẠN
+          ./ngrok.exe config add-authtoken "mã_token_của_bạn_ở_đây"
+
+      - name: 3. Bat Remote Desktop va Chay Ngrok Tunnel
+        shell: powershell
+        run: |
+          Write-Host "Dang kich hoat tinh nang Remote Desktop cua Windows..." -ForegroundColor Cyan
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          
+          Write-Host "==================================================" -ForegroundColor Green
+          Write-Host "KHOI CHAY NGROK TUNNEL QUA REGION CHAU A (AP)..." -ForegroundColor Green
+          Write-Host "==================================================" -ForegroundColor Green
+          
+          # Chạy ngrok trên cổng RDP (3389) và ép buộc dùng vùng 'ap' (Asia/Pacific) để giảm ping tối đa
+          Start-Process ./ngrok.exe -ArgumentList "tcp 3389 --region ap"
+          
+          Write-Host "Moi ban vao trang: https://ngrok.com" -ForegroundColor Yellow
+          Write-Host "De lay dia chi IP ket noi (Vi du: 0.tcp.ap.ngrok.io:xxxxx)" -ForegroundColor Yellow
+          
+          # Vòng lặp giữ cho tiến trình không bị tắt (Treo trong 6 tiếng)
+          $count = 0
+          while ($count -lt 2160) {
+              Start-Sleep -Seconds 10
+              $count++
+          }

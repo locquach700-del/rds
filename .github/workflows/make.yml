@@ -1,31 +1,12 @@
-name: Kich Hoat May Ao Mien Phi Qua Pinggy
+name: Kich Hoat May Ao Qua Web Tmate
 
 on: 
-  workflow_dispatch: # Bấm nút chạy thủ công trên giao diện web
+  workflow_dispatch: # Bấm nút chạy thủ công trên web
 
 jobs:
-  fast-rdp:
-    runs-on: ubuntu-latest # Dùng máy ảo Linux khởi động siêu tốc
+  web-terminal:
+    runs-on: ubuntu-latest # Dùng máy Linux khởi động siêu tốc
 
     steps:
-      - name: Khoi tao duong truyen lay IP dang nhap truc tiep
-        run: |
-          echo "=================================================="
-          echo " DANG KICH HOAT DUONG TRUYEN PINGGY CHUAN"
-          echo "=================================================="
-          
-          # Khởi chạy cổng kết nối ngầm thông qua hệ thống Pinggy công khai
-          ssh -p 443 -R0:localhost:22 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io > pinggy.log 2>&1 &
-          
-          # Đợi 8 giây để Pinggy nhận diện và gán cổng kết nối công khai ổn định
-          sleep 8
-          
-          # In toàn bộ dữ liệu thô của log ra để chắc chắn bạn nhìn thấy link
-          echo "=================================================="
-          echo " ĐỊA CHỈ IP KẾT NỐI ĐĂNG NHẬP CỦA BẠN LÀ:"
-          echo "=================================================="
-          cat pinggy.log
-          echo "=================================================="
-          
-          # Giữ máy ảo chạy liên tục để bạn sử dụng
-          sleep 21600
+      - name: Khoi tao link dieu khien qua Web browser
+        uses: mxschmitt/action-tmate@v3

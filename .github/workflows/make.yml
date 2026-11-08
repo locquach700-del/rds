@@ -1,4 +1,4 @@
-name: Chay May Ao Mien Phi GitHub
+name: Chay Not Cong Viec Mien Phi
 
 on:
   push:
@@ -6,20 +6,17 @@ on:
   workflow_dispatch: # Tạo nút bấm chạy thủ công trên web
 
 jobs:
-  free-job:
-    # Đổi từ self-hosted sang ubuntu-latest (máy Linux chạy mượt và nhanh nhất)
-    runs-on: ubuntu-latest 
+  run-job:
+    # Bắt buộc dùng self-hosted để lệnh truyền về máy tính của bạn
+    runs-on: self-hosted
 
     steps:
-      - name: Keo code tu Repository ve may ao
+      - name: Lay code ve may
         uses: actions/checkout@v4
 
-      # MÁY ẢO CỦA GITHUB ĐÃ CÓ SẴN PYTHON, BẠN CHỈ CẦN GỌI RA DÙNG:
-      - name: Chay thu nghiem xem cau hinh may mien phi
+      - name: Chay lenh cua ban
         run: |
-          echo "=== Thong tin CPU may ao GitHub ==="
-          lscpu | grep "Model name"
-          echo "=== Thong tin RAM may ao GitHub ==="
-          free -h
-          echo "=== Kiem tra phien ban Python co san ==="
-          python3 --version
+          Write-Host "========================================="
+          Write-Host "MAY CUA BAN DA NHAN LENH THANH CONG!"
+          Write-Host "========================================="
+          # Bạn muốn chạy lệnh gì tiếp theo thì viết thêm vào dưới này nhé

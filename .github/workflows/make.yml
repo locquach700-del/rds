@@ -1,31 +1,30 @@
-name: Kich Hoat May Ao Sieu Toc Co Ngay IP
+name: Kich Hoat May Ao Mien Phi Qua Pinggy
 
 on: 
-  workflow_dispatch: 
+  workflow_dispatch: # Bấm nút chạy thủ công trên giao diện web
 
 jobs:
   fast-rdp:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest # Dùng máy ảo Linux khởi động siêu tốc
 
     steps:
-      - name: 1. Khoi chay Ngrok truc tiep khong can ghi file cau hinh
+      - name: Khoi tao duong truyen lay IP dang nhap truc tiep
         run: |
-          echo "=== DANG KICH HOAT DUONG TRUYEN TOC DO CAO ==="
+          echo "=================================================="
+          echo " DANG KICH HOAT DUONG TRUYEN TOC DO CAO PINGGY "
+          echo "=================================================="
           
-          # Cài đặt Ngrok bản chính thức qua hệ thống
-          sudo snap install ngrok
-          
-          # Khởi chạy trực tiếp bằng cách truyền Token thẳng vào tham số dòng lệnh (Bỏ qua lỗi mkdir)
-          ngrok tcp 22 --authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u" --region ap > /dev/null &
+          # Khởi chạy cổng kết nối ngầm qua hệ thống Pinggy (Không cần cài đặt, không cần token)
+          ssh -p 443 -R0:localhost:22 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io > pinggy.log &
           
           # Đợi 5 giây để hệ thống thiết lập đường truyền ổn định
           sleep 5
           
-          # Truy xuất và in thẳng địa chỉ IP kết nối ra màn hình log công khai
+          # Truy xuất đường link kết nối công khai được cấp và in thẳng ra màn hình log
           echo "=================================================="
           echo " ĐỊA CHỈ IP KẾT NỐI ĐĂNG NHẬP CỦA BẠN LÀ:"
           echo "=================================================="
-          curl -s http://localhost:4040/api/tunnels | grep -o '0.tcp.ap.ngrok.io:[0-9]*' || echo "Chưa lấy được IP, vui lòng bấm chạy lại!"
+          grep -o 'tcp://.*' pinggy.log | sed 's/tcp:\/\///' || echo "Chưa lấy được IP, vui lòng bấm chạy lại!"
           echo "=================================================="
           
           # Giữ máy ảo chạy liên tục để bạn sử dụng

@@ -11,20 +11,20 @@ jobs:
       - name: Khoi tao duong truyen lay IP dang nhap truc tiep
         run: |
           echo "=================================================="
-          echo " DANG KICH HOAT DUONG TRUYEN TOC DO CAO PINGGY "
+          echo " DANG KICH HOAT DUONG TRUYEN PINGGY CHUAN"
           echo "=================================================="
           
-          # Khởi chạy cổng kết nối ngầm qua hệ thống Pinggy (Không cần cài đặt, không cần token)
-          ssh -p 443 -R0:localhost:22 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io > pinggy.log &
+          # Khởi chạy cổng kết nối ngầm thông qua hệ thống Pinggy công khai
+          ssh -p 443 -R0:localhost:22 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io > pinggy.log 2>&1 &
           
-          # Đợi 5 giây để hệ thống thiết lập đường truyền ổn định
-          sleep 5
+          # Đợi 8 giây để Pinggy nhận diện và gán cổng kết nối công khai ổn định
+          sleep 8
           
-          # Truy xuất đường link kết nối công khai được cấp và in thẳng ra màn hình log
+          # In toàn bộ dữ liệu thô của log ra để chắc chắn bạn nhìn thấy link
           echo "=================================================="
           echo " ĐỊA CHỈ IP KẾT NỐI ĐĂNG NHẬP CỦA BẠN LÀ:"
           echo "=================================================="
-          grep -o 'tcp://.*' pinggy.log | sed 's/tcp:\/\///' || echo "Chưa lấy được IP, vui lòng bấm chạy lại!"
+          cat pinggy.log
           echo "=================================================="
           
           # Giữ máy ảo chạy liên tục để bạn sử dụng

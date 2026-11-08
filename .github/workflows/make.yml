@@ -8,18 +8,15 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
-      - name: 1. Cai dat Ngrok chinh thuc tu he thong va Lay IP
+      - name: 1. Khoi chay Ngrok truc tiep khong can ghi file cau hinh
         run: |
           echo "=== DANG KICH HOAT DUONG TRUYEN TOC DO CAO ==="
           
-          # Cài đặt Ngrok bản mới nhất chính thức thông qua Snapcraft của Ubuntu (Không lo lỗi link tải)
+          # Cài đặt Ngrok bản chính thức qua hệ thống
           sudo snap install ngrok
           
-          # Cấu hình Token của bạn
-          ngrok config add-authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u"
-          
-          # Khởi chạy cổng kết nối ngầm qua vùng Châu Á (ap) để giảm lag
-          ngrok tcp 22 --region ap > /dev/null &
+          # Khởi chạy trực tiếp bằng cách truyền Token thẳng vào tham số dòng lệnh (Bỏ qua lỗi mkdir)
+          ngrok tcp 22 --authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u" --region ap > /dev/null &
           
           # Đợi 5 giây để hệ thống thiết lập đường truyền ổn định
           sleep 5

@@ -1,21 +1,29 @@
-name: Kich Hoat Windows Server Va Hien Thi IP Tu Dong
+name: Kich Hoat May Ao Sieu Toc Co Ngay IP
 
 on: 
-  workflow_dispatch: # Tạo nút bấm chạy thủ công trên web
+  workflow_dispatch: # Bấm nút chạy thủ công trên web
 
 jobs:
-  build:
-    runs-on: windows-latest # Dùng máy ảo Windows Server cấu hình cao có sẵn của GitHub
+  fast-rdp:
+    # Dùng máy ảo Linux khởi động siêu tốc (chỉ mất 2 giây)
+    runs-on: ubuntu-latest 
 
     steps:
-      - name: 1. Bat Remote Desktop va Thiet lap mat khau
+      - name: 1. Tai va Cau hinh Ngrok lay IP truc tiep
         run: |
-          # Đặt mật khẩu đăng nhập cho máy ảo là: RDPuser123
-          net user runneradmin RDPuser123
+          echo "=== DANG KICH HOAT DUONG TRUYEN TOC DO CAO ==="
+          # Tải bản Ngrok Linux chính thức giải nén cực nhanh
+          wget -q https://equinox.io
+          tar -xf ngrok-v3-stable-linux-amd64.tgz
           
-          # Kích hoạt tính năng Remote Desktop của Windows Server
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-
-      - name: 2. Kich hoat duong truyen va tu dong in thong tin dang nhap
-        uses: mxschmitt/action-tmate@v3
+          # Cấu hình Token của bạn và chọn máy chủ khu vực Châu Á (ap) để giảm ping tối đa
+          ./ngrok config add-authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u"
+          ./ngrok tcp 22 --region ap &
+          
+          # Đợi 3 giây để hệ thống ổn định và truy xuất địa chỉ IP đăng nhập ra màn hình
+          sleep 3
+          curl -s http://localhost:4040/api/tunnels | grep -o '0.tcp.ap.ngrok.io:[0-9]*'
+          
+          echo "==============================================="
+          echo "=== MAY CUA BAN DA KICH HOAT THANH CONG ==="
+          echo "==============================================="

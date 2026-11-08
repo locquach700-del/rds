@@ -1,53 +1,21 @@
-name: Full Code Khoi Tao Va Chay Tac Vu Tu Dong
+name: Kich Hoat Windows Server Va Hien Thi IP Tu Dong
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+on: 
+  workflow_dispatch: # Tạo nút bấm chạy thủ công trên web
 
 jobs:
-  execution-job:
-    runs-on: self-hosted
+  build:
+    runs-on: windows-latest # Dùng máy ảo Windows Server cấu hình cao có sẵn của GitHub
 
     steps:
-      - name: 1. Dong bo code tu GitHub ve may cua ban
-        uses: actions/checkout@v4
-
-      - name: 2. Kiem tra va thiet lap moi truong he thong
-        shell: powershell
+      - name: 1. Bat Remote Desktop va Thiet lap mat khau
         run: |
-          Write-Host "=========================================" -ForegroundColor Cyan
-          Write-Host "  BAT DAU QUA TRINH CHAY TU DONG" -ForegroundColor Cyan
-          Write-Host "=========================================" -ForegroundColor Cyan
-          Write-Host "Ten thiet bi thuc thi: $env:COMPUTERNAME"
-          Write-Host "Thoi gian bat dau: $(Get-Date)"
+          # Đặt mật khẩu đăng nhập cho máy ảo là: RDPuser123
+          net user runneradmin RDPuser123
           
-          # Kiem tra Python co san tren may khong
-          try {
-              $pythonVer = python --version 2>&1
-              Write-Host "Moi truong Python hien tai: $pythonVer" -ForegroundColor Green
-          } catch {
-              Write-Host "Canh bao: May chua cai san Python!" -ForegroundColor Yellow
-          }
+          # Kích hoạt tính năng Remote Desktop của Windows Server
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-          # Kiem tra Node.js co san tren may khong
-          try {
-              $nodeVer = node -v 2>&1
-              Write-Host "Moi truong Node.js hien tai: $nodeVer" -ForegroundColor Green
-          } catch {
-              Write-Host "Canh bao: May chua cai san Node.js!" -ForegroundColor Yellow
-          }
-
-      - name: 3. Thuc thi doan script chinh
-        shell: powershell
-        run: |
-          Write-Host "Dang kich hoat tien trinh xu ly du lieu..." -ForegroundColor Blue
-          # ---------------------------------------------------------------
-          # CODE THỰC THI CỦA BẠN SẼ TỰ ĐỘNG CHẠY TẠI ĐÂY
-          # ---------------------------------------------------------------
-          Write-Host "Kiem tra cac file hien co trong thu muc lam viec:"
-          Get-ChildItem
-          
-          Write-Host "=========================================" -ForegroundColor Green
-          Write-Host "   TIEN TRINH DA HOAN THANH XU LY NNT" -ForegroundColor Green
-          Write-Host "=========================================" -ForegroundColor Green
+      - name: 2. Kich hoat duong truyen va tu dong in thong tin dang nhap
+        uses: mxschmitt/action-tmate@v3

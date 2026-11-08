@@ -1,42 +1,32 @@
-name: Tao Terminal Dieu Khien Tren Trinh Duyet Web
+name: Chay Script Tu Dong Khong Lo Loi Ket Noi
 
 on: 
-  workflow_dispatch: # Bấm nút chạy thủ công trên web
+  workflow_dispatch: # Tạo nút bấm để bạn kích hoạt chạy thủ công bất cứ lúc nào
 
 jobs:
-  web-terminal:
-    runs-on: ubuntu-latest # Dùng máy ảo Linux khởi động siêu tốc
+  automation-job:
+    runs-on: ubuntu-latest # Dùng máy ảo Linux miễn phí cấu hình cao của GitHub
 
     steps:
-      - name: 1. Cai dat va Khoi tao Terminal giao dien Web
+      - name: 1. Keo toan bo file code tu kho luu tru ve may ao
+        uses: actions/checkout@v4
+
+      - name: 2. Kiem tra thong tin va Khoi tao moi truong
         run: |
           echo "=================================================="
-          echo " DANG KHOI TAO TERMINAL WEB TOI UU "
+          echo "    MAY AO GITHUB DA KICH HOAT THANH CONG"
           echo "=================================================="
+          echo "Cau hinh RAM cua may:"
+          free -h
+          echo "Phiên ban Python co san:"
+          python3 --version
+
+      - name: 3. Tu dong chay file code cua ban (Sua bot.py thanh file cua ban)
+        run: |
+          # BƯỚC NÀY SẼ TỰ ĐỘNG CHẠY FILE CODE CỦA BẠN:
+          # Nếu code của bạn cần cài thư viện, hãy bỏ dấu # ở dòng dưới ra:
+          # pip install -r requirements.txt
           
-          # Cài đặt công cụ ttsh (Web-based terminal) để biến dòng lệnh thành trang web
-          curl -sLk https://githubusercontent.com | bash
-          
-          # Cài đặt công cụ tạo link công khai localtunnel công nghệ NodeJS
-          sudo npm install -g localtunnel
-          
-          # Cho phép khởi chạy máy chủ dòng lệnh trên cổng 8080 ngầm
-          ./gotty -w --port 8080 bash > /dev/null 2>&1 &
-          
-          # Đợi 3 giây để máy chủ cục bộ hoạt động ổn định
-          sleep 3
-          
-          # Kích hoạt tạo đường link trang web public không cần tài khoản
-          lt --port 8080 > localtunnel.log 2>&1 &
-          
-          # Đợi 5 giây để localtunnel cấp link web sạch
-          sleep 5
-          
-          echo "=================================================="
-          echo " ĐƯỜNG LINK TRANG WEB ĐIỀU KHIỂN CỦA BẠN LÀ:"
-          echo "=================================================="
-          cat localtunnel.log
-          echo "=================================================="
-          
-          # Giữ máy ảo chạy liên tục trong 6 tiếng để bạn treo tác vụ
-          sleep 21600
+          # Lệnh kích hoạt file code chính của bạn (Ví dụ file tên là bot.py)
+          # Bạn hãy tải file code của bạn lên kho lưu trữ GitHub này nhé
+          python3 bot.py

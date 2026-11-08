@@ -1,29 +1,38 @@
 name: Kich Hoat May Ao Sieu Toc Co Ngay IP
 
 on: 
-  workflow_dispatch: # Bấm nút chạy thủ công trên web
+  workflow_dispatch: 
 
 jobs:
   fast-rdp:
-    # Dùng máy ảo Linux khởi động siêu tốc (chỉ mất 2 giây)
     runs-on: ubuntu-latest 
 
     steps:
       - name: 1. Tai va Cau hinh Ngrok lay IP truc tiep
         run: |
           echo "=== DANG KICH HOAT DUONG TRUYEN TOC DO CAO ==="
-          # Tải bản Ngrok Linux chính thức giải nén cực nhanh
-          wget -q https://equinox.io
-          tar -xf ngrok-v3-stable-linux-amd64.tgz
           
-          # Cấu hình Token của bạn và chọn máy chủ khu vực Châu Á (ap) để giảm ping tối đa
+          # Tải bản Ngrok Linux định dạng ZIP chính thức ổn định nhất
+          wget -q -O ngrok.zip https://equinox.io
+          
+          # Giải nén file zip lập tức
+          unzip -o ngrok.zip
+          
+          # Cấu hình Token của bạn
           ./ngrok config add-authtoken "3LmAI46qVE5SpRkry5WpXFJltSs_6Ada1J5ciNdAvdMZKcG8u"
-          ./ngrok tcp 22 --region ap &
           
-          # Đợi 3 giây để hệ thống ổn định và truy xuất địa chỉ IP đăng nhập ra màn hình
-          sleep 3
-          curl -s http://localhost:4040/api/tunnels | grep -o '0.tcp.ap.ngrok.io:[0-9]*'
+          # Khởi chạy cổng kết nối ngầm qua vùng Châu Á (ap) để giảm lag
+          ./ngrok tcp 22 --region ap > /dev/null &
           
-          echo "==============================================="
-          echo "=== MAY CUA BAN DA KICH HOAT THANH CONG ==="
-          echo "==============================================="
+          # Đợi 5 giây để hệ thống thiết lập đường truyền
+          sleep 5
+          
+          # Truy xuất và in thẳng địa chỉ IP kết nối ra màn hình log
+          echo "=================================================="
+          echo " ĐỊA CHỈ IP KẾT NỐI ĐĂNG NHẬP CỦA BẠN LÀ:"
+          echo "=================================================="
+          curl -s http://localhost:4040/api/tunnels | grep -o '0.tcp.ap.ngrok.io:[0-9]*' || echo "Chưa lấy được IP, vui lòng bấm chạy lại!"
+          echo "=================================================="
+          
+          # Giữ máy ảo chạy liên tục để bạn sử dụng
+          sleep 21600

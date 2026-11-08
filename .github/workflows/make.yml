@@ -1,22 +1,53 @@
-name: Chay Not Cong Viec Mien Phi
+name: Full Code Khoi Tao Va Chay Tac Vu Tu Dong
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch: # Tạo nút bấm chạy thủ công trên web
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
-  run-job:
-    # Bắt buộc dùng self-hosted để lệnh truyền về máy tính của bạn
+  execution-job:
     runs-on: self-hosted
 
     steps:
-      - name: Lay code ve may
+      - name: 1. Dong bo code tu GitHub ve may cua ban
         uses: actions/checkout@v4
 
-      - name: Chay lenh cua ban
+      - name: 2. Kiem tra va thiet lap moi truong he thong
+        shell: powershell
         run: |
-          Write-Host "========================================="
-          Write-Host "MAY CUA BAN DA NHAN LENH THANH CONG!"
-          Write-Host "========================================="
-          # Bạn muốn chạy lệnh gì tiếp theo thì viết thêm vào dưới này nhé
+          Write-Host "=========================================" -ForegroundColor Cyan
+          Write-Host "  BAT DAU QUA TRINH CHAY TU DONG" -ForegroundColor Cyan
+          Write-Host "=========================================" -ForegroundColor Cyan
+          Write-Host "Ten thiet bi thuc thi: $env:COMPUTERNAME"
+          Write-Host "Thoi gian bat dau: $(Get-Date)"
+          
+          # Kiem tra Python co san tren may khong
+          try {
+              $pythonVer = python --version 2>&1
+              Write-Host "Moi truong Python hien tai: $pythonVer" -ForegroundColor Green
+          } catch {
+              Write-Host "Canh bao: May chua cai san Python!" -ForegroundColor Yellow
+          }
+
+          # Kiem tra Node.js co san tren may khong
+          try {
+              $nodeVer = node -v 2>&1
+              Write-Host "Moi truong Node.js hien tai: $nodeVer" -ForegroundColor Green
+          } catch {
+              Write-Host "Canh bao: May chua cai san Node.js!" -ForegroundColor Yellow
+          }
+
+      - name: 3. Thuc thi doan script chinh
+        shell: powershell
+        run: |
+          Write-Host "Dang kich hoat tien trinh xu ly du lieu..." -ForegroundColor Blue
+          # ---------------------------------------------------------------
+          # CODE THỰC THI CỦA BẠN SẼ TỰ ĐỘNG CHẠY TẠI ĐÂY
+          # ---------------------------------------------------------------
+          Write-Host "Kiem tra cac file hien co trong thu muc lam viec:"
+          Get-ChildItem
+          
+          Write-Host "=========================================" -ForegroundColor Green
+          Write-Host "   TIEN TRINH DA HOAN THANH XU LY NNT" -ForegroundColor Green
+          Write-Host "=========================================" -ForegroundColor Green

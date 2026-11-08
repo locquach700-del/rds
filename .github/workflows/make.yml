@@ -1,33 +1,42 @@
-name: Kich Hoat May Ao Mien Phi Qua Serveo
+name: Tao Terminal Dieu Khien Tren Trinh Duyet Web
 
 on: 
   workflow_dispatch: # Bấm nút chạy thủ công trên web
 
 jobs:
-  fast-rdp:
+  web-terminal:
     runs-on: ubuntu-latest # Dùng máy ảo Linux khởi động siêu tốc
 
     steps:
-      - name: Khoi tao duong truyen lay lenh dang nhap truc tiep
+      - name: 1. Cai dat va Khoi tao Terminal giao dien Web
         run: |
           echo "=================================================="
-          echo " DANG KICH HOAT DUONG TRUYEN TOC DO CAO SERVEO "
+          echo " DANG KHOI TAO TERMINAL WEB TOI UU "
           echo "=================================================="
           
-          # Khởi chạy cổng kết nối ngầm thông qua hệ thống Serveo công khai
-          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:22 serveo.net > serveo.log 2>&1 &
+          # Cài đặt công cụ ttsh (Web-based terminal) để biến dòng lệnh thành trang web
+          curl -sLk https://githubusercontent.com | bash
           
-          # Đợi 5 giây để hệ thống Serveo cấp đường link kết nối ổn định
+          # Cài đặt công cụ tạo link công khai localtunnel công nghệ NodeJS
+          sudo npm install -g localtunnel
+          
+          # Cho phép khởi chạy máy chủ dòng lệnh trên cổng 8080 ngầm
+          ./gotty -w --port 8080 bash > /dev/null 2>&1 &
+          
+          # Đợi 3 giây để máy chủ cục bộ hoạt động ổn định
+          sleep 3
+          
+          # Kích hoạt tạo đường link trang web public không cần tài khoản
+          lt --port 8080 > localtunnel.log 2>&1 &
+          
+          # Đợi 5 giây để localtunnel cấp link web sạch
           sleep 5
           
-          # In trực tiếp kết quả để lấy link đăng nhập
           echo "=================================================="
-          echo " LỆNH ĐĂNG NHẬP MÁY CHỦ CỦA BẠN LÀ:"
+          echo " ĐƯỜNG LINK TRANG WEB ĐIỀU KHIỂN CỦA BẠN LÀ:"
           echo "=================================================="
-          cat serveo.log
+          cat localtunnel.log
           echo "=================================================="
-          echo "👉 Hãy copy toàn bộ dòng lệnh hiển thị phía trên"
-          echo "và dán vào cmd/PowerShell trên máy tính của bạn để đăng nhập nhé!"
           
-          # Giữ máy ảo chạy liên tục để bạn sử dụng
+          # Giữ máy ảo chạy liên tục trong 6 tiếng để bạn treo tác vụ
           sleep 21600
